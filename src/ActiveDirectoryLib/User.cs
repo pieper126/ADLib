@@ -5,6 +5,7 @@ using System.DirectoryServices.AccountManagement;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ActiveDirectoryLib.Exceptions;
 
 namespace ActiveDirectoryLib
 {

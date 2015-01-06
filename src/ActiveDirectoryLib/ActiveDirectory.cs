@@ -6,6 +6,7 @@ using System.DirectoryServices.AccountManagement;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ActiveDirectoryLib.Exceptions;
 
 namespace ActiveDirectoryLib
 {
@@ -25,12 +26,28 @@ namespace ActiveDirectoryLib
 
         internal static string AdminPassword { get; private set; }
 
+        internal static bool isDomainSet { get { return DomainPath != null || DomainPath.Trim() != string.Empty; } }
+
+        internal static bool isAdminAccountSet
+        {
+            get
+            {
+                return AdminUsername != null || AdminUsername.Trim() != string.Empty ||
+                        AdminPassword != null || AdminPassword.Trim() != string.Empty;
+            }
+        }
+
         /// <summary>
         /// Sets the currently active domain.
         /// </summary>
-        /// <param name="LDAPPath">The LDAP path of the domain</param>
+        /// <param name="LDAPPath">The LDAP path of the domain. This cannot be null or an empty string.</param>
+        /// <exception cref="ArgumentNullException">Gets thrown when LDAPPath is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when PDAPPath is an empty string.</exception>
         public static void SetDomain(string LDAPPath)
         {
+            if (LDAPPath == null) throw new ArgumentNullException("LDAPPath");
+            if (LDAPPath == string.Empty) throw new ArgumentException("LDAPPath was empty.");
+
             DomainPath = LDAPPath;
             LDAPDomainName = LDAPPath.Substring(0, LDAPPath.LastIndexOf('/') + 1);
             DomainName = LDAPDomainName.Substring(7, LDAPDomainName.Length - 2 - 7);
@@ -42,12 +59,14 @@ namespace ActiveDirectoryLib
         /// Sets the currently active admin account, used when performing any action that requires administrator access. The active domain needs to be set to use this!
         /// To set the currently active domain user SetDomain(LDAPPath).
         /// </summary>
-        /// <param name="username">The username of the admin account.</param>
-        /// <param name="password">The password of the admin account.</param>
+        /// <param name="username">The username of the admin account. Cannot be null or empty.</param>
+        /// <param name="password">The password of the admin account. Cannot be null or empty.</param>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when username or password is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when username or password is an empty string.</exception>
         public static void SetAdminAccount(string username, string password)
         {
-            if (!Authenticate(username, password)) throw new DomainNotSetException();
+            if (!Authenticate(username, password)) throw new InvalidCredentialsException();
 
             AdminUsername = username;
             AdminPassword = password;
@@ -56,13 +75,19 @@ namespace ActiveDirectoryLib
         /// <summary>
         /// Authenticates a user against the currently active domain. Use SetDomain(LDAPPath) to set the currently active domain.
         /// </summary>
-        /// <param name="username">The username of the user.</param>
-        /// <param name="password">The password of the user.</param>
+        /// <param name="username">The username of the admin account. Cannot be null or empty.</param>
+        /// <param name="password">The password of the admin account. Cannot be null or empty.</param>
         /// <returns>True if the account was authenticated, false if not.</returns>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when username or password is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when username or password is an empty string.</exception>
         public static bool Authenticate(string username, string password)
         {
-            if (DomainPath == null || DomainPath.Trim() == string.Empty) throw new DomainNotSetException();
+            if (username == null) throw new ArgumentNullException("username");
+            if (password == null) throw new ArgumentNullException("password");
+            if (username == string.Empty) throw new ArgumentException("username was empty.");
+            if (password == string.Empty) throw new ArgumentException("password was empty.");
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
 
             bool authenticated = false;
             try
@@ -95,11 +120,13 @@ namespace ActiveDirectoryLib
         /// The currently active domain must be set to use this! To set the active domain use SetDomain(LDAPPath)
         /// The currently active admin account must be set to use this! To set the active admin account use SetAdminAccount(username, password)
         /// </summary>
-        /// <param name="cn">The cn of the new user.</param>
-        /// <param name="password">The password of the new user.</param>
+        /// <param name="cn">The cn of the new user. This cannot be null or empty.</param>
+        /// <param name="password">The password of the new user. This cannot be null or empty.</param>
         /// <returns>The newly created user.</returns>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
         /// <exception cref="AdminAccountNotSetException">Gets thrown when the admin account hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when any argument is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when cn or password is an empty string or when no OUs were passed.</exception>
         public static User CreateUser(string cn, string password)
         {
             List<string> OUs = new List<string>();
@@ -112,17 +139,25 @@ namespace ActiveDirectoryLib
         /// The currently active domain must be set to use this! To set the active domain use SetDomain(LDAPPath)
         /// The currently active admin account must be set to use this! To set the active admin account use SetAdminAccount(username, password)
         /// </summary>
-        /// <param name="cn">The cn of the new user.</param>
-        /// <param name="password">The password of the new user.</param>
-        /// <param name="OUs">The Organizational Units for the new user.</param>
+        /// <param name="cn">The cn of the new user. This cannot be null or empty.</param>
+        /// <param name="password">The password of the new user. This cannot be null or empty.</param>
+        /// <param name="OUs">The Organizational Units for the new user. This cannot be null or empty</param>
         /// <returns>The newly created user.</returns>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
         /// <exception cref="AdminAccountNotSetException">Gets thrown when the admin account hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when any argument is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when cn or password is an empty string or when no OUs were passed.</exception>
         public static User CreateUser(string cn, string password, List<string> OUs)
         {
-            if (DomainPath == null || DomainPath.Trim() == string.Empty) throw new DomainNotSetException();
-            if (AdminUsername == null || AdminUsername.Trim() == string.Empty ||
-                AdminPassword == null || AdminPassword.Trim() == string.Empty) throw new AdminAccountNotSetException();
+            if (cn == null) throw new ArgumentNullException("username");
+            if (password == null) throw new ArgumentNullException("password");
+            if (OUs == null) throw new ArgumentNullException("OUs");
+            if (cn == string.Empty) throw new ArgumentException("cn was empty.");
+            if (password == string.Empty) throw new ArgumentException("password was empty.");
+            if (OUs.Count == 0) throw new ArgumentException("No OUs were passed.");
+
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+            if (!ActiveDirectory.isAdminAccountSet) throw new AdminAccountNotSetException();
 
             string LDAP = CreateLDAPForOUs(OUs);
             DirectoryEntry entry = new DirectoryEntry(LDAP, AdminUsername, AdminPassword, AuthenticationTypes.Secure);
@@ -158,11 +193,17 @@ namespace ActiveDirectoryLib
         /// <returns>The group that was created.</returns>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
         /// <exception cref="AdminAccountNotSetException">Gets thrown when the admin account hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when any argument is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when name is an empty string or when no OUs were passed.</exception>
         public static Group CreateGroup(string name, List<string> OUs)
         {
-            if (DomainPath == null || DomainPath.Trim() == string.Empty) throw new DomainNotSetException();
-            if (AdminUsername == null || AdminUsername.Trim() == string.Empty ||
-                AdminPassword == null || AdminPassword.Trim() == string.Empty) throw new AdminAccountNotSetException();
+            if (name == null) throw new ArgumentNullException("username");
+            if (OUs == null) throw new ArgumentNullException("OUs");
+            if (name == string.Empty) throw new ArgumentException("name was empty.");
+            if (OUs.Count == 0) throw new ArgumentException("No OUs were passed.");
+
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+            if (!ActiveDirectory.isAdminAccountSet) throw new AdminAccountNotSetException();
 
             DirectoryEntry entry = new DirectoryEntry(CreateLDAPForOUs(OUs), AdminUsername, AdminPassword, AuthenticationTypes.Secure);
             DirectoryEntry group = entry.Children.Add("CN=" + name, "group");
@@ -176,10 +217,18 @@ namespace ActiveDirectoryLib
         /// <summary>
         /// Gets the CN based on the username.
         /// </summary>
-        /// <param name="username">The username of the account.</param>
-        /// <returns>The cn.</returns>
+        /// <param name="username">The username of the account. This cannot be null or empty.</param>
+        /// <returns>The CN. If the CN cannot be found null is returned instead.</returns>
+        /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when username is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when username is an empty string.</exception>
         public static string GetCNFromUsername(string username)
         {
+            if (username == null) throw new ArgumentNullException("username");
+            if (username == string.Empty) throw new ArgumentException("username was empty.");
+
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+
             string ldapPath = LDAPDomainName + LDAPExtension;
             DirectoryEntry entry = new DirectoryEntry(ldapPath, AdminUsername, AdminPassword, AuthenticationTypes.Secure);
 
@@ -196,7 +245,7 @@ namespace ActiveDirectoryLib
 
             foreach (object val in result.Properties["cn"])
             {
-                if (val is String)
+                if (val is String || val is string)
                 {
                     return (string)val;
                 }
@@ -206,12 +255,20 @@ namespace ActiveDirectoryLib
         }
 
         /// <summary>
-        /// Gets a user from active directory based on it's cn.
+        /// Gets a user from active directory based on it's CN.
         /// </summary>
-        /// <param name="cn">The cn.</param>
+        /// <param name="cn">The CN. this cannot be null or empty.</param>
         /// <returns>The user if one was found, else it will return null.</returns>
+        /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when cn is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when cn is an empty string.</exception>
         public static User GetUser(string cn)
         {
+            if (cn == null) throw new ArgumentNullException("cn");
+            if (cn == string.Empty) throw new ArgumentException("cn was empty.");
+
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+
             string ldapPath = LDAPDomainName + LDAPExtension;
             DirectoryEntry entry = new DirectoryEntry(ldapPath, AdminUsername, AdminPassword, AuthenticationTypes.Secure);
 
@@ -279,8 +336,16 @@ namespace ActiveDirectoryLib
         /// </summary>
         /// <param name="OUs">The OU's for the path.</param>
         /// <returns>The path</returns>
+        /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when OUs is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when no OUs were passed.</exception>
         private static string CreateLDAPForOUs(List<string> OUs)
         {
+            if (OUs == null) throw new ArgumentNullException("OUs");
+            if (OUs.Count == 0) throw new ArgumentException("No OUs were passed.");
+
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+
             string LDAP = LDAPDomainName;
             foreach (string OU in OUs)
             {

@@ -4,6 +4,7 @@ using System.DirectoryServices;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ActiveDirectoryLib.Exceptions;
 
 namespace ActiveDirectoryLib
 {
