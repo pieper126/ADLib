@@ -1,0 +1,4 @@
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\bin\Release\ActiveDirectoryLib.dll
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\bin\Release\ActiveDirectoryLib.pdb
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\obj\Release\ActiveDirectoryLib.dll
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\obj\Release\ActiveDirectoryLib.pdb

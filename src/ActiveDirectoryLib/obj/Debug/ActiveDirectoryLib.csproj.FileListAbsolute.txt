@@ -1,0 +1,5 @@
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\bin\Debug\ActiveDirectoryLib.dll
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\bin\Debug\ActiveDirectoryLib.pdb
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\obj\Debug\ActiveDirectoryLib.dll
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\obj\Debug\ActiveDirectoryLib.pdb
+C:\Users\Stan\Documents\Visual Studio 2013\Projects\ActiveDirectoryLib\ActiveDirectoryLib\obj\Debug\ActiveDirectoryLib.csprojResolveAssemblyReference.cache
