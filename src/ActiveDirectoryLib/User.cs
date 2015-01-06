@@ -111,7 +111,7 @@ namespace ActiveDirectoryLib
         
         #endregion
         
-        public User(string username, string userPath)
+        internal User(string username, string userPath)
         {
             this.Username = username;
             this.UserPath = userPath;
@@ -120,17 +120,14 @@ namespace ActiveDirectoryLib
         /// <summary>
         /// Commits all changes to the user.
         /// The currently active domain must be set. To set the domain use: SetDomain(LDAPPath).
-        /// The currently active admin account must be set to use this! To set the active admin account use SetAdminAccount(username, password)
+        /// The currently active admin account must be set to use this. To set the active admin account use: SetAdminAccount(username, password)
         /// </summary>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
         /// <exception cref="AdminAccountNotSetException">Gets thrown when the admin account hasn't been set.</exception>
         public void CommitChanges()
         {
-            if (ActiveDirectory.DomainPath == null || ActiveDirectory.DomainPath.Trim() == string.Empty)
-                throw new DomainNotSetException();
-            if (ActiveDirectory.AdminUsername == null || ActiveDirectory.AdminUsername.Trim() == string.Empty ||
-                ActiveDirectory.AdminPassword == null || ActiveDirectory.AdminPassword.Trim() == string.Empty)
-                throw new AdminAccountNotSetException();
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+            if (!ActiveDirectory.isAdminAccountSet) throw new AdminAccountNotSetException();
 
             DirectoryEntry user = new DirectoryEntry(this.UserPath, ActiveDirectory.AdminUsername, ActiveDirectory.AdminPassword, AuthenticationTypes.Secure);
 
@@ -176,13 +173,15 @@ namespace ActiveDirectoryLib
         /// <param name="password">The password to set to.</param>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
         /// <exception cref="AdminAccountNotSetException">Gets thrown when the admin account hasn't been set.</exception>
+        /// <exception cref="ArgumentNullException">Gets thrown when password is null.</exception>
+        /// <exception cref="ArgumentException">Gets thrown when password is an empty string.</exception>
         public void SetPassword(string password)
         {
-            if (ActiveDirectory.DomainPath == null || ActiveDirectory.DomainPath.Trim() == string.Empty)
-                throw new DomainNotSetException();
-            if (ActiveDirectory.AdminUsername == null || ActiveDirectory.AdminUsername.Trim() == string.Empty ||
-                ActiveDirectory.AdminPassword == null || ActiveDirectory.AdminPassword.Trim() == string.Empty)
-                throw new AdminAccountNotSetException();
+            if (password == null) throw new ArgumentNullException("password");
+            if (password == string.Empty) throw new ArgumentException("password was empty.");
+
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+            if (!ActiveDirectory.isAdminAccountSet) throw new AdminAccountNotSetException();
 
             DirectoryEntry user = new DirectoryEntry(this.UserPath, ActiveDirectory.AdminUsername, ActiveDirectory.AdminPassword, AuthenticationTypes.Secure);
             user.Invoke("SetPassword", new object[] { password });
@@ -192,17 +191,14 @@ namespace ActiveDirectoryLib
         /// <summary>
         /// Enables this user. 
         /// The currently active domain must be set. To set the domain use: SetDomain(LDAPPath).
-        /// The currently active admin account must be set to use this. To set the active admin account use SetAdminAccount(username, password)
+        /// The currently active admin account must be set to use this. To set the active admin account use: SetAdminAccount(username, password)
         /// </summary>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
         /// <exception cref="AdminAccountNotSetException">Gets thrown when the admin account hasn't been set.</exception>
         public void Enable()
         {
-            if (ActiveDirectory.DomainPath == null || ActiveDirectory.DomainPath.Trim() == string.Empty)
-                throw new DomainNotSetException();
-            if (ActiveDirectory.AdminUsername == null || ActiveDirectory.AdminUsername.Trim() == string.Empty ||
-                ActiveDirectory.AdminPassword == null || ActiveDirectory.AdminPassword.Trim() == string.Empty)
-                throw new AdminAccountNotSetException();
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+            if (!ActiveDirectory.isAdminAccountSet) throw new AdminAccountNotSetException();
 
             PrincipalContext principalContext = new PrincipalContext(ContextType.Domain, this.UserPath, ActiveDirectory.AdminUsername, ActiveDirectory.AdminPassword);
             UserPrincipal userprincipal = UserPrincipal.FindByIdentity(principalContext, this.Username);
@@ -214,17 +210,14 @@ namespace ActiveDirectoryLib
         /// <summary>
         /// Disables this user. 
         /// The currently active domain must be set. To set the domain use: SetDomain(LDAPPath).
-        /// The currently active admin account must be set to use this. To set the active admin account use SetAdminAccount(username, password) <see cref="SetAdminAccount"/>
+        /// The currently active admin account must be set to use this. To set the active admin account use: SetAdminAccount(username, password) <see cref="SetAdminAccount"/>
         /// </summary>
         /// <exception cref="DomainNotSetException">Gets thrown when the domain hasn't been set.</exception>
         /// <exception cref="AdminAccountNotSetException">Gets thrown when the admin account hasn't been set.</exception>
         public void Disable()
         {
-            if (ActiveDirectory.DomainPath == null || ActiveDirectory.DomainPath.Trim() == string.Empty)
-                throw new DomainNotSetException();
-            if (ActiveDirectory.AdminUsername == null || ActiveDirectory.AdminUsername.Trim() == string.Empty ||
-                ActiveDirectory.AdminPassword == null || ActiveDirectory.AdminPassword.Trim() == string.Empty)
-                throw new AdminAccountNotSetException();
+            if (!ActiveDirectory.isDomainSet) throw new DomainNotSetException();
+            if (!ActiveDirectory.isAdminAccountSet) throw new AdminAccountNotSetException();
 
             PrincipalContext principalContext = new PrincipalContext(ContextType.Domain, this.UserPath, ActiveDirectory.AdminUsername, ActiveDirectory.AdminPassword);
             UserPrincipal userprincipal = UserPrincipal.FindByIdentity(principalContext, this.Username);
